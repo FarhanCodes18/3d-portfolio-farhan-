@@ -11,15 +11,30 @@ export default function Hero() {
   const mouseY = useMotionValue(0);
 
   useEffect(() => {
+    let rafId = null;
+    let pendingX = 0;
+    let pendingY = 0;
+
     const handleMouseMove = (e) => {
       if (!containerRef.current) return;
       const { left, top } = containerRef.current.getBoundingClientRect();
-      mouseX.set(e.clientX - left);
-      mouseY.set(e.clientY - top);
+      pendingX = e.clientX - left;
+      pendingY = e.clientY - top;
+      // RAF-throttle: update motion values at most once per animation frame
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          mouseX.set(pendingX);
+          mouseY.set(pendingY);
+          rafId = null;
+        });
+      }
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [mouseX, mouseY]);
 
   // Create a template string for the radial spotlight glow style
@@ -82,18 +97,32 @@ export default function Hero() {
         {/* Left Side: Bold Futuristic Typography */}
         <div className="lg:col-span-7 flex flex-col text-left justify-center pr-0 xl:pr-10">
           
-          {/* Cyber Status Tag */}
+          {/* Available for Work Status Badge */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex items-center gap-3 border border-cyber-border/40 w-fit px-3 py-1 rounded bg-[#FFD600]/5 text-xs font-mono tracking-widest text-[#FFD600] mb-6"
+            className="flex flex-wrap items-center gap-3 mb-6"
           >
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFD600] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FFD600]"></span>
-            </span>
-            <span>SYSTEM ONLINE // LINK_ESTABLISHED</span>
+            <div
+              className="group flex items-center gap-3 px-4 py-1.5 rounded-full border border-green-500/30 bg-[#0a0a0d]/80 backdrop-blur-xl transition-all duration-300 hover:border-green-400 hover:shadow-[0_0_20px_rgba(74,222,128,0.25)] select-none cursor-default"
+              style={{
+                boxShadow: "0 0 15px rgba(74,222,128,0.1), inset 0 0 10px rgba(74,222,128,0.05)"
+              }}
+            >
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500 shadow-[0_0_8px_#4ade80]"></span>
+              </span>
+              <span className="font-mono text-[11px] md:text-xs font-bold uppercase tracking-[0.18em] text-green-400">
+                AVAILABLE FOR FREELANCE &amp; FULL-TIME WORK
+              </span>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full border border-[#FFD600]/20 bg-[#FFD600]/5 font-mono text-[10px] tracking-widest text-[#FFD600]/80">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FFD600] animate-pulse" />
+              <span>SYSTEM ONLINE</span>
+            </div>
           </motion.div>
 
           {/* Name Display */}

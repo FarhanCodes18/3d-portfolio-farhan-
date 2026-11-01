@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useMotionTemplate, useInView } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useDevice } from "../hooks/useDevice";
 import * as THREE from "three";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Brain, Play, Terminal, HelpCircle, Activity, Cpu, Code } from "lucide-react";
+import { Brain, Play, Terminal, HelpCircle, Activity, Cpu } from "lucide-react";
 
 // Presets for the interactive terminal simulation
 const PRESETS = [
@@ -224,7 +224,8 @@ const aiControlCenterStyles = `
 `;
 
 // 3D Neural Network Nodes and Connection Lines
-function NeuralNetwork3D({ mouse }) {
+// OPTIMIZED: mouse is now a ref object (no re-renders), scrollY cached via ref
+function NeuralNetwork3D({ mouseRef, scrollRef }) {
   const groupRef = useRef();
   const ring1Ref = useRef();
   const ring2Ref = useRef();
@@ -239,74 +240,70 @@ function NeuralNetwork3D({ mouse }) {
   const currentMouseX = useRef(0);
   const currentMouseY = useRef(0);
 
-  const count = 50;
+  // Reduced count from 50 to 40 nodes — fewer draw calls
+  const count = 40;
   const { positions, lineIndices } = useMemo(() => {
     const pos = new Float32Array(count * 3);
     const indices = [];
 
-    // Distribute points in a sphere shape
     for (let i = 0; i < count; i++) {
       const u = Math.random();
       const v = Math.random();
       const theta = u * 2.0 * Math.PI;
       const phi = Math.acos(2.0 * v - 1.0);
-      const r = Math.cbrt(Math.random()) * 2.6; // radius up to 2.6
+      const r = Math.cbrt(Math.random()) * 2.6;
 
       pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       pos[i * 3 + 2] = r * Math.cos(phi);
     }
 
-    // Connect close points with lines
     for (let i = 0; i < count; i++) {
       for (let j = i + 1; j < count; j++) {
         const dx = pos[i * 3] - pos[j * 3];
         const dy = pos[i * 3 + 1] - pos[j * 3 + 1];
         const dz = pos[i * 3 + 2] - pos[j * 3 + 2];
         const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-        if (dist < 1.15) {
-          indices.push(i, j);
-        }
+        if (dist < 1.15) indices.push(i, j);
       }
     }
 
-    return { 
-      positions: pos, 
-      lineIndices: new Uint16Array(indices) 
-    };
+    return { positions: pos, lineIndices: new Uint16Array(indices) };
   }, []);
 
-  // Set up secondary background floating dust
-  const dustCount = 60;
+  // Reduced dust count from 60 to 40
+  const dustCount = 40;
   const dustPositions = useMemo(() => {
     const pos = new Float32Array(dustCount * 3);
     for (let i = 0; i < dustCount; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 12;
+      pos[i * 3]     = (Math.random() - 0.5) * 12;
       pos[i * 3 + 1] = (Math.random() - 0.5) * 12;
       pos[i * 3 + 2] = (Math.random() - 0.5) * 12;
     }
     return pos;
   }, []);
 
+  // Pre-built torus geometries — reduced segments for fewer polygons
+  const ring1Geo = useMemo(() => new THREE.TorusGeometry(2.5, 0.005, 6, 48), []);
+  const ring2Geo = useMemo(() => new THREE.TorusGeometry(3.1, 0.007, 6, 48), []);
+  const ring3Geo = useMemo(() => new THREE.TorusGeometry(1.8, 0.004, 4, 32), []);
+
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-    const scrollY = window.scrollY || document.documentElement.scrollTop;
+    // FIXED: read cached ref instead of window.scrollY (no DOM layout reflow)
+    const scrollY = scrollRef.current;
 
-    // Smoothly lerp towards tracked mouse coordinates
-    const targetMouseX = mouse.x * 0.5;
-    const targetMouseY = mouse.y * 0.5;
+    // Smoothly lerp towards tracked mouse coordinates (read from ref, no re-render)
+    const targetMouseX = mouseRef.current.x * 0.5;
+    const targetMouseY = mouseRef.current.y * 0.5;
     currentMouseX.current = THREE.MathUtils.lerp(currentMouseX.current, targetMouseX, 0.05);
     currentMouseY.current = THREE.MathUtils.lerp(currentMouseY.current, targetMouseY, 0.05);
 
-    // Scroll parallax depth effect
     const targetY = scrollY * 0.0004 - 1.6;
 
     if (groupRef.current) {
       groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY + currentMouseY.current * 0.4, 0.05);
       groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, currentMouseX.current * 0.4, 0.05);
-      
-      // Auto-rotation combined with interactive mouse offset
       groupRef.current.rotation.y = time * 0.02 + currentMouseX.current * 0.25;
       groupRef.current.rotation.x = currentMouseY.current * 0.25;
     }
@@ -441,17 +438,14 @@ function NeuralNetwork3D({ mouse }) {
         </mesh>
       </group>
 
-      {/* Orbiting torus rings */}
-      <mesh ref={ring1Ref}>
-        <torusGeometry args={[2.5, 0.005, 8, 100]} />
+      {/* Orbiting torus rings — geometry reused from useMemo cache */}
+      <mesh ref={ring1Ref} geometry={ring1Geo}>
         <meshBasicMaterial color="#00E5FF" transparent opacity={0.12} wireframe />
       </mesh>
-      <mesh ref={ring2Ref}>
-        <torusGeometry args={[3.1, 0.007, 6, 80]} />
+      <mesh ref={ring2Ref} geometry={ring2Geo}>
         <meshBasicMaterial color="#FFD600" transparent opacity={0.08} wireframe />
       </mesh>
-      <mesh ref={ring3Ref}>
-        <torusGeometry args={[1.8, 0.004, 4, 60]} />
+      <mesh ref={ring3Ref} geometry={ring3Geo}>
         <meshBasicMaterial color="#00E5FF" transparent opacity={0.15} wireframe />
       </mesh>
     </group>
@@ -688,15 +682,33 @@ function JSONHighlighter({ text }) {
   );
 }
 
+// Inject styles once into document head — not on every render
+function useInjectStyles(css) {
+  useEffect(() => {
+    const id = "ai-section-styles";
+    if (!document.getElementById(id)) {
+      const style = document.createElement("style");
+      style.id = id;
+      style.textContent = css;
+      document.head.appendChild(style);
+    }
+    // No cleanup — styles are global and should persist
+  }, []);
+}
+
 export default function AIGenAI() {
   const sectionRef = useRef(null);
   const headerRef = useRef(null);
   const canvasContainerRef = useRef(null);
   const inView = useInView(sectionRef, { once: true, amount: 0.15 });
   const canvasInView = useInView(canvasContainerRef, { margin: "250px" });
-  const { isMobile } = useDevice();
+  const { isMobile, isLowEnd } = useDevice();
 
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  // OPTIMIZED: mouse position as ref — no re-render on every mouse pixel
+  const mousePosRef = useRef({ x: 0, y: 0 });
+  // OPTIMIZED: scroll cached as ref — no DOM read inside useFrame
+  const scrollRef = useRef(0);
+
   const headerX = useMotionValue(0);
   const headerY = useMotionValue(0);
 
@@ -709,18 +721,21 @@ export default function AIGenAI() {
   const sectionRectRef = useRef(null);
   const headerRectRef = useRef(null);
 
-  const handleMouseMove = (e) => {
+  // Inject styles once into <head> — eliminates repeated style tag injection
+  useInjectStyles(aiControlCenterStyles);
+
+  // OPTIMIZED: mouse move updates ref only (no setState, no re-render)
+  const handleMouseMove = useCallback((e) => {
     if (!sectionRef.current) return;
     if (!sectionRectRef.current) {
       sectionRectRef.current = sectionRef.current.getBoundingClientRect();
     }
     const rect = sectionRectRef.current;
-    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1; // -1 to 1
-    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1; // -1 to 1
-    setMousePos({ x, y });
-  };
+    mousePosRef.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mousePosRef.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  }, []);
 
-  const handleHeaderMouseMove = (e) => {
+  const handleHeaderMouseMove = useCallback((e) => {
     if (!headerRef.current) return;
     if (!headerRectRef.current) {
       headerRectRef.current = headerRef.current.getBoundingClientRect();
@@ -728,58 +743,51 @@ export default function AIGenAI() {
     const rect = headerRectRef.current;
     headerX.set(e.clientX - rect.left);
     headerY.set(e.clientY - rect.top);
-  };
+  }, [headerX, headerY]);
 
   useEffect(() => {
     const handleResizeOrScroll = () => {
       sectionRectRef.current = null;
       headerRectRef.current = null;
     };
-    window.addEventListener("resize", handleResizeOrScroll);
-    window.addEventListener("scroll", handleResizeOrScroll);
+    // OPTIMIZED: cache scrollY in ref so useFrame doesn't read DOM
+    const handleScroll = () => {
+      scrollRef.current = window.scrollY || document.documentElement.scrollTop;
+      handleResizeOrScroll();
+    };
+    window.addEventListener("resize", handleResizeOrScroll, { passive: true });
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("resize", handleResizeOrScroll);
-      window.removeEventListener("scroll", handleResizeOrScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
   const headerGlow = useMotionTemplate`radial-gradient(240px circle at ${headerX}px ${headerY}px, rgba(255, 214, 0, 0.08), transparent 80%)`;
 
-  // GSAP Animations on scroll load
+  // GSAP Animations on scroll load — register plugin only once
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
-
-    gsap.fromTo(
-      ".ai-header-line",
-      { scaleX: 0, opacity: 0 },
-      {
-        scaleX: 1,
-        opacity: 1,
-        duration: 1.5,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: ".ai-section-container",
-          start: "top 80%",
-          once: true,
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        ".ai-header-line",
+        { scaleX: 0, opacity: 0 },
+        {
+          scaleX: 1, opacity: 1, duration: 1.5, ease: "power3.out",
+          scrollTrigger: { trigger: ".ai-section-container", start: "top 80%", once: true }
         }
-      }
-    );
-
-    gsap.fromTo(
-      ".ai-title",
-      { opacity: 0, y: 40 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 1.2,
-        ease: "power4.out",
-        scrollTrigger: {
-          trigger: ".ai-section-container",
-          start: "top 80%",
-          once: true,
+      );
+      gsap.fromTo(
+        ".ai-title",
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1, y: 0, duration: 1.2, ease: "power4.out",
+          scrollTrigger: { trigger: ".ai-section-container", start: "top 80%", once: true }
         }
-      }
-    );
+      );
+    });
+    // Proper GSAP cleanup to prevent ScrollTrigger memory leaks
+    return () => ctx.revert();
   }, []);
 
   // Run simulated AI terminal diagnostics steps character by character
@@ -855,20 +863,25 @@ export default function AIGenAI() {
       onMouseMove={handleMouseMove}
       className="ai-section-container relative py-28 md:py-36 w-full bg-cyber-black overflow-hidden px-6 md:px-12 border-b border-cyber-border/20 flex flex-col justify-center"
     >
-      <style dangerouslySetInnerHTML={{ __html: aiControlCenterStyles }} />
+      {/* styles injected into <head> via useInjectStyles — no per-render injection */}
 
       {/* Repeating noise overlay */}
       <div className="absolute inset-0 noise-bg pointer-events-none z-0" />
 
-      {/* 3D Canvas Background (Interactive Neural Network Visualizer) */}
+      {/* 3D Canvas Background — disabled on mobile and low-end devices */}
       <div ref={canvasContainerRef} className="absolute inset-0 z-0 pointer-events-none opacity-55 select-none">
-        {canvasInView && !isMobile && (
-          <Canvas camera={{ position: [0, 0, 5.2], fov: 60 }} gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }} dpr={[1, 1.5]}>
+        {canvasInView && !isMobile && !isLowEnd && (
+          <Canvas
+            camera={{ position: [0, 0, 5.2], fov: 60 }}
+            gl={{ antialias: false, alpha: true, powerPreference: "high-performance", precision: "mediump" }}
+            dpr={[1, 1.2]}
+            performance={{ min: 0.5 }}
+          >
             <ambientLight intensity={0.25} />
             <pointLight position={[10, 10, 10]} intensity={1.2} color="#00E5FF" />
             <pointLight position={[-10, -10, -10]} intensity={0.8} color="#FFD600" />
-            <spotLight position={[0, 5, 5]} intensity={1.8} color="#FFD600" penumbra={1} angle={Math.PI / 4} />
-            <NeuralNetwork3D mouse={mousePos} />
+            {/* Removed spotLight — saves 1 shadow computation pass */}
+            <NeuralNetwork3D mouseRef={mousePosRef} scrollRef={scrollRef} />
           </Canvas>
         )}
       </div>

@@ -1,8 +1,9 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { motion, useMotionTemplate, useMotionValue, useInView } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useDevice } from "../hooks/useDevice";
 import * as THREE from "three";
+import farhanPhoto from "../assets/farhan-done.png";
 
 // 3D Particles & Hologram Rings for the background of the About section
 function AboutBgParticles() {
@@ -21,6 +22,9 @@ function AboutBgParticles() {
     return arr;
   }, []);
 
+  // Pre-built torus geometry — reduced segments
+  const ringGeo = useMemo(() => new THREE.TorusGeometry(3.5, 0.006, 6, 64), []);
+
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
     if (pointsRef.current) {
@@ -36,28 +40,19 @@ function AboutBgParticles() {
 
   return (
     <group>
-      {/* Slow floating points */}
       <points ref={pointsRef}>
         <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[positions, 3]}
-          />
+          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         </bufferGeometry>
         <pointsMaterial
-          color="#FFD600"
-          size={0.03}
-          sizeAttenuation={true}
-          transparent={true}
-          opacity={0.3}
-          depthWrite={false}
+          color="#FFD600" size={0.03} sizeAttenuation={true}
+          transparent={true} opacity={0.3} depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
       </points>
 
-      {/* Holographic orbital wireframe ring */}
-      <mesh ref={ringRef} position={[0, 0, -2]}>
-        <torusGeometry args={[3.5, 0.006, 8, 80]} />
+      {/* Holographic orbital wireframe ring — memoized geometry */}
+      <mesh ref={ringRef} geometry={ringGeo} position={[0, 0, -2]}>
         <meshBasicMaterial color="#FFD600" transparent opacity={0.12} wireframe />
       </mesh>
     </group>
@@ -69,7 +64,7 @@ export default function About() {
   const cardRef = useRef(null);
   const canvasContainerRef = useRef(null);
   const canvasInView = useInView(canvasContainerRef, { margin: "250px" });
-  const { isMobile } = useDevice();
+  const { isMobile, isLowEnd } = useDevice();
 
   // Mouse coords for text spotlight glow
   const textMouseX = useMotionValue(0);
@@ -84,34 +79,37 @@ export default function About() {
   const rectRef = useRef(null);
 
   useEffect(() => {
-    const updateRect = () => {
-      if (textContainerRef.current) {
-        rectRef.current = textContainerRef.current.getBoundingClientRect();
-      }
-    };
+    let rafId = null;
+    let pendingX = 0;
+    let pendingY = 0;
 
     const handleGlobalMouseMove = (e) => {
-      if (textContainerRef.current) {
-        if (!rectRef.current) {
-          updateRect();
-        }
-        const rect = rectRef.current;
-        textMouseX.set(e.clientX - rect.left);
-        textMouseY.set(e.clientY - rect.top);
+      if (!textContainerRef.current) return;
+      if (!rectRef.current) {
+        rectRef.current = textContainerRef.current.getBoundingClientRect();
+      }
+      pendingX = e.clientX - rectRef.current.left;
+      pendingY = e.clientY - rectRef.current.top;
+      // OPTIMIZED: throttle motion value updates via requestAnimationFrame
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          textMouseX.set(pendingX);
+          textMouseY.set(pendingY);
+          rafId = null;
+        });
       }
     };
 
-    const handleResizeOrScroll = () => {
-      rectRef.current = null;
-    };
+    const handleResizeOrScroll = () => { rectRef.current = null; };
 
-    window.addEventListener("mousemove", handleGlobalMouseMove);
-    window.addEventListener("resize", handleResizeOrScroll);
-    window.addEventListener("scroll", handleResizeOrScroll);
+    window.addEventListener("mousemove", handleGlobalMouseMove, { passive: true });
+    window.addEventListener("resize", handleResizeOrScroll, { passive: true });
+    window.addEventListener("scroll", handleResizeOrScroll, { passive: true });
     return () => {
       window.removeEventListener("mousemove", handleGlobalMouseMove);
       window.removeEventListener("resize", handleResizeOrScroll);
       window.removeEventListener("scroll", handleResizeOrScroll);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, [textMouseX, textMouseY]);
 
@@ -193,13 +191,14 @@ export default function About() {
       id="about"
       className="relative py-28 md:py-36 w-full bg-cyber-black overflow-hidden px-6 md:px-12 border-b border-cyber-border/20 flex flex-col justify-center"
     >
-      {/* 1. 3D Particles Background Canvas */}
+      {/* 1. 3D Particles Background Canvas — disabled on mobile & low-end */}
       <div ref={canvasContainerRef} className="absolute inset-0 z-0 pointer-events-none opacity-50 select-none">
-        {canvasInView && !isMobile && (
+        {canvasInView && !isMobile && !isLowEnd && (
           <Canvas
             camera={{ position: [0, 0, 5], fov: 60 }}
-            gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
-            dpr={[1, 1.5]}
+            gl={{ antialias: false, alpha: true, powerPreference: "high-performance", precision: "mediump" }}
+            dpr={[1, 1.2]}
+            performance={{ min: 0.5 }}
           >
             <AboutBgParticles />
           </Canvas>
@@ -283,9 +282,9 @@ export default function About() {
                   transition={{ type: "spring", damping: 20, stiffness: 200 }}
                 >
                   <img
-                    src="/src\assets\farhan.jpeg"
-                    alt="Farhan portrait"
-                    className="w-full h-full object-cover filter brightness-[0.75] contrast-[1.1] grayscale hover:grayscale-0 transition-all duration-700"
+                    src={farhanPhoto}
+                    alt="Farhan Qureshi portrait"
+                    className="w-full h-full object-cover object-top filter brightness-[0.95] contrast-[1.05] group-hover:brightness-100 transition-all duration-700"
                     draggable="false"
                   />
                 </motion.div>

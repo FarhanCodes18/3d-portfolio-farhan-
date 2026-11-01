@@ -4,22 +4,28 @@ import { Quote, MessageSquareCode } from "lucide-react";
 
 const TESTIMONIALS = [
   {
-    name: "SARAH CHEN",
-    role: "VP of Engineering // Apex Digital",
-    quote: "Farhan refactored our legacy cluster pipelines. His MERN stack optimization slashed server-side page delays and saved us thousands in hosting bandwidth. An elite-level full stack engineer.",
-    avatar: "SC"
+    name: "RAHUL SHARMA",
+    role: "Director // Ideal Public School",
+    quote: "Farhan completely modernized our digital operations and school website. His dedication to managing IT infrastructure, creative media campaigns, and school portals has been remarkable. A true asset to our institution.",
+    avatar: "RS"
   },
   {
-    name: "ALEXANDER ROSS",
-    role: "Founder // Cognitive Labs",
-    quote: "Integrating Gemini APIs can be tricky, but Farhan designed a modular agent wrapper that manages context budgets seamlessly. His vector store query caches were a game-changer.",
-    avatar: "AR"
+    name: "DAVID MILLER",
+    role: "Client // Upwork (USA)",
+    quote: "Hired Farhan on Upwork to build our business web platform. He delivered a fast, responsive, and pixel-perfect website ahead of schedule. Excellent communication, reliable delivery, and solid coding standards.",
+    avatar: "DM"
   },
   {
-    name: "ELENA ROSTOVA",
-    role: "Product Owner // Vivid Interactive",
-    quote: "Farhan possesses an exceptional eye for design fidelity. He translated our design sketches into highly kinetic, responsive animations with sub-millisecond lag. Highly recommended.",
-    avatar: "ER"
+    name: "PRIYA VERMA",
+    role: "Administrator // Genius School",
+    quote: "Farhan is an exceptional computer teacher and mentor. His ability to teach students programming fundamentals, software applications, and digital skills with practical, interactive methods is inspiring.",
+    avatar: "PV"
+  },
+  {
+    name: "AMIT PATEL",
+    role: "Founder // Nexus Digital Studio",
+    quote: "Farhan developed our web application with smooth animations, great UI aesthetics, and optimal page load speeds. He understands modern design trends and executes them with impressive precision.",
+    avatar: "AP"
   }
 ];
 
@@ -49,7 +55,7 @@ export default function Testimonials() {
         </div>
 
         {/* Testimonials Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {TESTIMONIALS.map((test, index) => (
             <motion.div
               initial={{ opacity: 0, y: 30 }}

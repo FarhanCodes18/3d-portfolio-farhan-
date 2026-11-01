@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, memo } from "react";
 import { motion, useInView, useMotionValue, useSpring, useMotionTemplate, animate } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useDevice } from "../hooks/useDevice";
@@ -26,11 +26,23 @@ function StatsBgParticles() {
     return arr;
   }, []);
 
+  // Pre-built geometries — reduced segments for fewer draw calls
+  const ringGeo = useMemo(() => new THREE.TorusGeometry(3.2, 0.008, 6, 64), []);
+  const ring1Geo = useMemo(() => new THREE.TorusGeometry(0.8, 0.004, 6, 32), []);
+  const ring2Geo = useMemo(() => new THREE.TorusGeometry(1.1, 0.005, 6, 32), []);
+
+  // FIXED: cached scrollY ref — no DOM reflow inside useFrame
+  const scrollRef = useRef(0);
+  useEffect(() => {
+    const onScroll = () => { scrollRef.current = window.scrollY || 0; };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-    const scrollY = window.scrollY || document.documentElement.scrollTop;
+    const scrollY = scrollRef.current;
 
-    // Apply scroll parallax depth effect
     if (groupRef.current) {
       const targetY = scrollY * 0.0006 - 0.3;
       groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.05);
@@ -45,14 +57,12 @@ function StatsBgParticles() {
     if (smallRing1Ref.current) {
       smallRing1Ref.current.rotation.y = -time * 0.12;
       smallRing1Ref.current.rotation.z = time * 0.08;
-      // Ambient floating
       smallRing1Ref.current.position.y = 1.3 + Math.sin(time * 0.7) * 0.12;
     }
 
     if (smallRing2Ref.current) {
       smallRing2Ref.current.rotation.x = time * 0.15;
       smallRing2Ref.current.rotation.y = time * 0.05;
-      // Ambient floating
       smallRing2Ref.current.position.y = -1.2 + Math.cos(time * 0.5) * 0.1;
     }
 
@@ -64,40 +74,25 @@ function StatsBgParticles() {
 
   return (
     <group ref={groupRef}>
-      {/* Subtle Background Particles */}
       <points ref={particlesRef}>
         <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[positions, 3]}
-          />
+          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         </bufferGeometry>
         <pointsMaterial
-          color="#FFD600"
-          size={0.035}
-          sizeAttenuation={true}
-          transparent={true}
-          opacity={0.35}
-          depthWrite={false}
+          color="#FFD600" size={0.035} sizeAttenuation={true}
+          transparent={true} opacity={0.35} depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
       </points>
 
-      {/* Floating Orbit Ring near top-center */}
-      <mesh ref={ringRef} position={[0, 1.8, -2.5]}>
-        <torusGeometry args={[3.2, 0.008, 8, 100]} />
+      {/* Rings with memoized geometry — no per-render reallocation */}
+      <mesh ref={ringRef} geometry={ringGeo} position={[0, 1.8, -2.5]}>
         <meshBasicMaterial color="#FFD600" transparent opacity={0.15} wireframe />
       </mesh>
-
-      {/* Small holographic circle 1 (left) */}
-      <mesh ref={smallRing1Ref} position={[-3, 1.3, -3]}>
-        <torusGeometry args={[0.8, 0.004, 6, 60]} />
+      <mesh ref={smallRing1Ref} geometry={ring1Geo} position={[-3, 1.3, -3]}>
         <meshBasicMaterial color="#FFD600" transparent opacity={0.25} wireframe />
       </mesh>
-
-      {/* Small holographic circle 2 (right) */}
-      <mesh ref={smallRing2Ref} position={[3.2, -1.2, -3]}>
-        <torusGeometry args={[1.1, 0.005, 6, 60]} />
+      <mesh ref={smallRing2Ref} geometry={ring2Geo} position={[3.2, -1.2, -3]}>
         <meshBasicMaterial color="#FFD600" transparent opacity={0.2} wireframe />
       </mesh>
     </group>
@@ -250,7 +245,7 @@ export default function Stats() {
   const canvasContainerRef = useRef(null);
   const inView = useInView(containerRef, { once: true, amount: 0.15 });
   const canvasInView = useInView(canvasContainerRef, { margin: "250px" });
-  const { isMobile } = useDevice();
+  const { isMobile, isLowEnd } = useDevice();
 
   const stats = [
     { value: "02", label: "Years Experience" },
@@ -260,24 +255,18 @@ export default function Stats() {
   ];
 
   useEffect(() => {
-    // GSAP ScrollTrigger animation for the divider line
     gsap.registerPlugin(ScrollTrigger);
-
-    gsap.fromTo(
-      ".stats-divider-line",
-      { scaleX: 0, opacity: 0 },
-      {
-        scaleX: 1,
-        opacity: 1,
-        duration: 1.8,
-        ease: "power4.out",
-        scrollTrigger: {
-          trigger: ".stats-section-container",
-          start: "top 85%",
-          once: true,
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        ".stats-divider-line",
+        { scaleX: 0, opacity: 0 },
+        {
+          scaleX: 1, opacity: 1, duration: 1.8, ease: "power4.out",
+          scrollTrigger: { trigger: ".stats-section-container", start: "top 85%", once: true }
         }
-      }
-    );
+      );
+    });
+    return () => ctx.revert();
   }, []);
 
   return (
@@ -286,13 +275,14 @@ export default function Stats() {
       className="stats-section-container relative py-24 md:py-32 w-full bg-cyber-black overflow-hidden px-6 md:px-12 border-b border-cyber-border/20 flex flex-col justify-center"
       id="stats"
     >
-      {/* 3D Canvas Background */}
+      {/* 3D Canvas Background — disabled on mobile & low-end devices */}
       <div ref={canvasContainerRef} className="absolute inset-0 z-0 pointer-events-none opacity-60 select-none">
-        {canvasInView && !isMobile && (
+        {canvasInView && !isMobile && !isLowEnd && (
           <Canvas
             camera={{ position: [0, 0, 5], fov: 60 }}
-            gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
-            dpr={[1, 1.5]}
+            gl={{ antialias: false, alpha: true, powerPreference: "high-performance", precision: "mediump" }}
+            dpr={[1, 1.2]}
+            performance={{ min: 0.5 }}
           >
             <StatsBgParticles />
           </Canvas>

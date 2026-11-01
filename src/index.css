@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+/* Google Fonts are loaded non-blocking via index.html <link> tags — removed blocking @import */
 @import "tailwindcss";
 @import "lenis/dist/lenis.css";
 
@@ -221,4 +221,77 @@ html.lenis, html.lenis body {
 
 .lenis-scrolling iframe {
   pointer-events: none;
+}
+
+/* ============================================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================================ */
+
+/* Promote animated elements to their own compositor layer */
+.perspective-grid,
+.grid-floor,
+[class*="animate-"] {
+  will-change: transform;
+}
+
+/* Motion value driven elements get GPU layer hints */
+.fixed,
+[style*="transform"] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .grid-floor {
+    animation: none !important;
+  }
+}
+
+/* Mobile Performance Mode: disable heavy effects */
+@media (max-width: 767px) {
+  /* Disable backdrop-blur on mobile (GPU expensive) */
+  .glassmorphism,
+  .glassmorphism-luxury {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(11, 11, 14, 0.9);
+  }
+
+  /* Disable perspective grid animation on mobile */
+  .grid-floor {
+    animation: none;
+    opacity: 0.5;
+  }
+
+  /* Reduce box-shadow complexity on mobile */
+  .neon-glow-border {
+    box-shadow: none;
+  }
+
+  /* Simplify gradient backgrounds on mobile */
+  .glow-yellow-radial {
+    display: none;
+  }
+}
+
+/* Medium devices: partial performance mode */
+@media (max-width: 1023px) {
+  /* Reduce blur radius for better GPU performance */
+  .glassmorphism {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .glassmorphism-luxury {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
 }

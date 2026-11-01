@@ -4,25 +4,28 @@ import { Calendar, Briefcase, Award } from "lucide-react";
 
 const EXPERIENCES = [
   {
-    role: "LEAD GENAI DEVELOPER",
-    company: "Cognitive Labs // Tech Corp",
-    period: "2024 - PRESENT",
-    desc: "Spearheaded integration of LLMs into commercial MERN SaaS frameworks. Established custom multi-agent routing engines and structured semantic caching systems which reduced OpenAI/Gemini API billing costs by 42%. Managed a team of 4 full-stack developers.",
-    highlights: ["Pinecone RAG Pipelines", "API Orchestration", "Team Leadership"]
+    id: "01",
+    role: "Freelance Web Developer",
+    company: "Upwork",
+    period: "2025 – MARCH 2026",
+    desc: "Worked as a Freelance Web Developer on Upwork, collaborating with clients to build modern, responsive, and user-friendly websites. Gained practical experience in client communication, project management, website development, and delivering digital solutions according to client requirements.",
+    highlights: ["HTML & CSS", "JavaScript", "Responsive Design", "Client Management"]
   },
   {
-    role: "SENIOR FULL STACK ENGINEER",
-    company: "Apex Digital Solutions",
-    period: "2022 - 2024",
-    desc: "Refactored high-traffic server architectures in Node.js, transitioning to clustered stateless systems. Tuned slow MongoDB aggregation queries and established Redis caching, boosting page response speeds by 65% across 40k+ daily active users.",
-    highlights: ["Node Clustering", "Database Optimization", "Redis Caching"]
+    id: "02",
+    role: "IT & Digital Media Manager",
+    company: "Ideal Public School // Chandori Waraseoni",
+    period: "2026 – PRESENT",
+    desc: "Currently managing IT operations and digital media activities at Ideal Public School, Chandori Waraseoni. Responsible for maintaining the school's website, managing digital platforms, creating promotional graphics and videos, handling online presence, and supporting technology-related activities.",
+    highlights: ["Website Management", "IT Operations", "Digital Marketing", "Graphic Designing", "SEO & Media Management"]
   },
   {
-    role: "FRONTEND UI DEVELOPER",
-    company: "Vivid Interactive Studios",
-    period: "2020 - 2022",
-    desc: "Engineered high-fidelity responsive user interfaces and custom HUD dashboards. Created internal design libraries using Tailwind CSS and SVG sprite packs. Implemented GSAP layout transitions and Framer Motion micro-animations.",
-    highlights: ["Design System Creation", "SVG Layouts", "GSAP Animations"]
+    id: "03",
+    role: "Computer Teacher",
+    company: "Genius School // Waraseoni",
+    period: "MARCH 2026 – PRESENT",
+    desc: "Working as a Computer Teacher, teaching students essential computer concepts and practical digital skills. Helping students understand computer fundamentals, software applications, programming basics, and modern technologies through interactive and practical learning methods.",
+    highlights: ["Computer Science", "MS Office", "Programming Fundamentals", "Practical Learning", "Student Mentoring"]
   }
 ];
 
@@ -66,7 +69,7 @@ export default function Experience() {
               const isEven = index % 2 === 0;
               return (
                 <div 
-                  key={exp.role} 
+                  key={exp.id || exp.role} 
                   className={`flex flex-col md:flex-row w-full relative ${
                     isEven ? "md:flex-row-reverse" : ""
                   }`}
@@ -97,10 +100,15 @@ export default function Experience() {
                       {/* Sub-corner HUD decorations */}
                       <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-[#FFD600]/10 group-hover:border-[#FFD600]/40 transition-colors pointer-events-none" />
 
-                      {/* Period Date Tag */}
-                      <div className="flex items-center gap-2 text-xs font-mono text-[#FFD600] mb-3">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>{exp.period}</span>
+                      {/* Period Date Tag & ID Badge */}
+                      <div className="flex items-center justify-between text-xs font-mono text-[#FFD600] mb-3">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>{exp.period}</span>
+                        </div>
+                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-[#FFD600]/10 text-[#FFD600] border border-[#FFD600]/20">
+                          {exp.id}
+                        </span>
                       </div>
 
                       {/* Title & Organization */}

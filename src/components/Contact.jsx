@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, Mail, MapPin, ShieldCheck } from "lucide-react";
+import { Send, Mail, MapPin, ShieldCheck, Globe } from "lucide-react";
 
 const GithubIcon = (props) => (
   <svg
@@ -110,7 +110,7 @@ export default function Contact() {
               </p>
             </div>
 
-            {/* Geo and Email Cards */}
+            {/* Geo, Email, and Website Cards */}
             <div className="flex flex-col gap-4">
               <div className="glassmorphism p-5 rounded flex items-center gap-4 hover:border-[#FFD600]/30 transition-colors">
                 <span className="w-10 h-10 rounded bg-[#FFD600]/5 border border-[#FFD600]/20 flex items-center justify-center text-[#FFD600]">
@@ -118,8 +118,8 @@ export default function Contact() {
                 </span>
                 <div className="flex flex-col">
                   <span className="text-[10px] font-mono text-gray-500 tracking-wider">EMAIL CHANNEL</span>
-                  <a href="mailto:farhan@example.com" className="text-sm font-semibold text-white hover:text-[#FFD600] transition-colors">
-                    farhan.dev@example.com
+                  <a href="mailto:techafarhan19@gmail.com" className="text-sm font-semibold text-white hover:text-[#FFD600] transition-colors">
+                    techafarhan19@gmail.com
                   </a>
                 </div>
               </div>
@@ -131,8 +131,20 @@ export default function Contact() {
                 <div className="flex flex-col">
                   <span className="text-[10px] font-mono text-gray-500 tracking-wider">LOC_COORDINATES</span>
                   <span className="text-sm font-semibold text-white">
-                    Bangalore, India // Virtual
+                    Waraseoni M.P, India
                   </span>
+                </div>
+              </div>
+
+              <div className="glassmorphism p-5 rounded flex items-center gap-4 hover:border-[#FFD600]/30 transition-colors">
+                <span className="w-10 h-10 rounded bg-[#FFD600]/5 border border-[#FFD600]/20 flex items-center justify-center text-[#FFD600]">
+                  <Globe className="w-5 h-5" />
+                </span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-mono text-gray-500 tracking-wider">WEBSITE DOMAIN</span>
+                  <a href="https://farhanqureshi.in" target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-white hover:text-[#FFD600] transition-colors">
+                    farhanqureshi.in
+                  </a>
                 </div>
               </div>
             </div>
