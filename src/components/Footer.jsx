@@ -34,7 +34,7 @@ export default function Footer() {
             <span className="text-[#FFD600]">•</span>
             <span className="text-gray-400 font-normal">PORTFOLIO COGNITION</span>
           </div>
-          <p className="text-gray-500 text-xxs font-mono tracking-widest uppercase">
+          <p className="text-gray-500 text-[10px] font-mono tracking-widest uppercase">
             © 2026 FARHAN. ALL RIGHTS SECURED // USER_IP_LOGGED
           </p>
         </div>

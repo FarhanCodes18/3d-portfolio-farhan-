@@ -210,7 +210,7 @@ const ProjectCard = memo(function ProjectCard({ project, index }) {
             rel="noopener noreferrer"
             className="group inline-block"
           >
-            <h3 className="font-display font-black text-3.5xl md:text-5xl lg:text-5.5xl leading-[1.05] text-white tracking-tight uppercase mb-4 select-text group-hover:text-[#FFD600] transition-colors duration-300">
+            <h3 className="font-display font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.05] text-white tracking-tight uppercase mb-4 select-text group-hover:text-[#FFD600] transition-colors duration-300">
               {project.title}
             </h3>
           </a>

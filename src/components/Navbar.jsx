@@ -169,7 +169,7 @@ export default function Navbar() {
             <div className="absolute inset-0 hud-scanline pointer-events-none opacity-40" />
 
             <div className="flex flex-col gap-6">
-              <div className="text-xxs tracking-[0.2em] font-mono text-gray-500 border-b border-cyber-border/40 pb-2">
+              <div className="text-[10px] tracking-[0.2em] font-mono text-gray-500 border-b border-cyber-border/40 pb-2">
                 NAVIGATION CORE
               </div>
               <nav className="flex flex-col gap-5">
@@ -205,7 +205,7 @@ export default function Navbar() {
                 </span>
                 <span>STATUS: STABLE & RECRUITING</span>
               </div>
-              <div className="text-xxs text-gray-500 font-mono tracking-wider">
+              <div className="text-[10px] text-gray-500 font-mono tracking-wider">
                 PORTFOLIO v1.0.0<br />
                 BUILT BY FARHAN
               </div>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const WHATSAPP_NUMBER = "919999999999"; // Set Farhan's WhatsApp phone number (with country code)
+const WHATSAPP_NUMBER = "917974271675"; // Farhan's WhatsApp phone number (with country code)
 const DEFAULT_MESSAGE = encodeURIComponent(
   "Hi Farhan! I saw your futuristic 3D portfolio and would love to collaborate on a project with you."
 );

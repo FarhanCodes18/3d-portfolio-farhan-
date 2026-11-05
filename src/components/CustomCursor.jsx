@@ -29,6 +29,7 @@ export default function CustomCursor() {
 
   useEffect(() => {
     if (isTouchDevice.current) return;
+    document.body.classList.add("custom-cursor-active");
 
     let rafId = null;
     let pendingX = -100;
@@ -68,6 +69,7 @@ export default function CustomCursor() {
     window.addEventListener("pointerover", handlePointerOver, { passive: true });
 
     return () => {
+      document.body.classList.remove("custom-cursor-active");
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("pointerover", handlePointerOver);
       if (rafId) cancelAnimationFrame(rafId);

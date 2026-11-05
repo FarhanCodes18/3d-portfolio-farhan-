@@ -1,7 +1,19 @@
-/* Google Fonts are loaded non-blocking via index.html <link> tags — removed blocking @import */
 @import "tailwindcss";
 @import "lenis/dist/lenis.css";
 
+/* Universal CSS Variable Fallbacks on :root for 100% browser & hosting compatibility */
+:root {
+  --color-neon-yellow: #FFD600;
+  --color-cyber-black: #050507;
+  --color-cyber-gray: #0b0b0e;
+  --color-cyber-card: rgba(11, 11, 14, 0.6);
+  --color-cyber-border: rgba(255, 214, 0, 0.15);
+  
+  --font-display: "Space Grotesk", sans-serif;
+  --font-sans: "Outfit", sans-serif;
+}
+
+/* Tailwind CSS v4 Theme Registration */
 @theme {
   --color-neon-yellow: #FFD600;
   --color-cyber-black: #050507;
@@ -11,6 +23,25 @@
   
   --font-display: "Space Grotesk", sans-serif;
   --font-sans: "Outfit", sans-serif;
+}
+
+/* Base HTML & Body Settings */
+html {
+  background-color: #050507;
+  color: #f3f4f6;
+  font-family: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  scroll-behavior: auto;
+}
+
+body {
+  background-color: #050507;
+  color: #f3f4f6;
+  font-family: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
 }
 
 /* Custom Scrollbar */
@@ -29,27 +60,37 @@
   background: #e6c000;
 }
 
-/* Hide default cursor on desktop devices with pointer input */
-@media (pointer: fine) {
-  body {
+/* Hide default cursor on desktop devices with pointer input ONLY when fine pointer is active */
+@media (pointer: fine) and (min-width: 1024px) {
+  body.custom-cursor-active {
     cursor: none;
   }
-  a, button, input, textarea, select, [role="button"], iframe, canvas {
-    cursor: none;
-  }
-}
-
-html, body {
-  background-color: #050507;
-  color: #f3f4f6;
-  font-family: "Outfit", sans-serif;
-  overflow-x: hidden;
-  scroll-behavior: auto;
 }
 
 ::selection {
   background-color: #FFD600;
   color: #050507;
+}
+
+/* Fallback Utility Classes — Prevents broken layout if theme tokens fail */
+.bg-cyber-black {
+  background-color: #050507 !important;
+}
+
+.bg-cyber-gray {
+  background-color: #0b0b0e !important;
+}
+
+.text-cyber-black {
+  color: #050507 !important;
+}
+
+.text-neon-yellow {
+  color: #FFD600 !important;
+}
+
+.border-cyber-border {
+  border-color: rgba(255, 214, 0, 0.15) !important;
 }
 
 /* Custom Futuristic Utilities */
@@ -69,14 +110,14 @@ html, body {
 }
 
 .glassmorphism {
-  background: rgba(11, 11, 14, 0.6);
+  background: rgba(11, 11, 14, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 214, 0, 0.1);
+  border: 1px solid rgba(255, 214, 0, 0.12);
 }
 
 .glassmorphism-luxury {
-  background: linear-gradient(135deg, rgba(15, 15, 20, 0.7) 0%, rgba(5, 5, 7, 0.8) 100%);
+  background: linear-gradient(135deg, rgba(15, 15, 20, 0.75) 0%, rgba(5, 5, 7, 0.85) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 214, 0, 0.15);
@@ -147,7 +188,6 @@ html, body {
   box-shadow: 0 0 10px #FFD600, 0 0 20px rgba(255, 214, 0, 0.8), 0 0 30px rgba(255, 214, 0, 0.6);
 }
 
-/* Flicker effect for Cyber UI */
 @keyframes hologram-flicker {
   0% { opacity: 0.95; filter: hue-rotate(0deg); }
   5% { opacity: 0.5; }
@@ -224,74 +264,22 @@ html.lenis, html.lenis body {
 }
 
 /* ============================================================
-   PERFORMANCE OPTIMIZATIONS
+   PERFORMANCE & RESPONSIVE TWEAKS
    ============================================================ */
 
-/* Promote animated elements to their own compositor layer */
-.perspective-grid,
-.grid-floor,
-[class*="animate-"] {
-  will-change: transform;
-}
-
-/* Motion value driven elements get GPU layer hints */
-.fixed,
-[style*="transform"] {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-/* Reduce motion for users who prefer it */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  .grid-floor {
-    animation: none !important;
-  }
-}
-
-/* Mobile Performance Mode: disable heavy effects */
+/* Mobile Performance Mode: graceful fallback for blur */
 @media (max-width: 767px) {
-  /* Disable backdrop-blur on mobile (GPU expensive) */
-  .glassmorphism,
-  .glassmorphism-luxury {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: rgba(11, 11, 14, 0.9);
-  }
-
-  /* Disable perspective grid animation on mobile */
-  .grid-floor {
-    animation: none;
-    opacity: 0.5;
-  }
-
-  /* Reduce box-shadow complexity on mobile */
-  .neon-glow-border {
-    box-shadow: none;
-  }
-
-  /* Simplify gradient backgrounds on mobile */
-  .glow-yellow-radial {
-    display: none;
-  }
-}
-
-/* Medium devices: partial performance mode */
-@media (max-width: 1023px) {
-  /* Reduce blur radius for better GPU performance */
   .glassmorphism {
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(11, 11, 14, 0.92);
   }
   .glassmorphism-luxury {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    background: rgba(11, 11, 14, 0.95);
+  }
+  .grid-floor {
+    opacity: 0.35;
   }
 }
