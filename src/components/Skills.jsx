@@ -107,6 +107,18 @@ const ARSENAL_SKILLS = [
     ),
   },
   {
+    name: "Supabase",
+    category: "Postgres BaaS",
+    tag: "PostgreSQL, Auth, Realtime, Storage",
+    color: "#3ECF8E",
+    rgb: "62, 207, 142",
+    svg: (
+      <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+        <path d="M21.362 9.354H12V.396a.396.396 0 0 0-.716-.233L.416 13.916a.396.396 0 0 0 .313.639H12v9.049a.396.396 0 0 0 .716.233l10.868-13.753a.396.396 0 0 0-.313-.639z" />
+      </svg>
+    ),
+  },
+  {
     name: "Firebase",
     category: "Cloud Services",
     tag: "Auth, Firestore, Cloud Functions",
@@ -540,7 +552,7 @@ export default function Skills() {
           />
         </div>
 
-        {/* 16-Skill Luxury Showcase Grid */}
+        {/* 17-Skill Luxury Showcase Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 w-full">
           {ARSENAL_SKILLS.map((skill, index) => (
             <SkillCapsuleCard
@@ -565,7 +577,7 @@ export default function Skills() {
         >
           <div className="space-y-1 border-r border-[#FFD600]/10 last:border-none">
             <div className="font-display font-black text-2xl md:text-3xl text-[#FFD600] filter drop-shadow-[0_0_10px_rgba(255,214,0,0.4)]">
-              16+
+              17+
             </div>
             <div className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
               Core Tech Stack
